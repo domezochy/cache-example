@@ -1,0 +1,6 @@
+http:
+  port: '8081'
+baseUrl:
+  path: 'empId'
+cloud:
+  path: 'https://reqres.in/api/users/{empId}'
