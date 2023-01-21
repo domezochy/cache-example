@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="e4011b21-1b4e-4106-8e43-919512e8281f" >
+		<http:listener-connection host="0.0.0.0" port="${http.port}" />
+	</http:listener-config>
+	<configuration-properties doc:name="Configuration properties" doc:id="85d3a547-77b5-466e-b224-d0eba2a294c0" file="properties/dev-config.yaml" />
+	<configuration-properties doc:name="Configuration properties" doc:id="bf31699d-e344-4e56-9707-82d0b6ea0d97" file="properties/local-config.yaml" />
+	<ee:object-store-caching-strategy name="Caching_Strategy" doc:name="Caching Strategy" doc:id="b1ff24b4-1ce7-4342-b2f3-195baa0bacb7" keyGenerationExpression="#[attributes.uriParams.empID]" />
+	<flow name="cache-exampleFlow" doc:id="54104b12-0bac-48ad-b2a3-fc90053f5a3c" >
+		<http:listener doc:name="Listener" doc:id="e0c12378-bedd-439c-a547-cbeb2182615e" config-ref="HTTP_Listener_config" path="/cache-demo/{empID}"/>
+		<logger level="INFO" doc:name="start Logger" doc:id="cf523715-fe6b-4b1b-8e07-775dd14c22f4" message="startLogger"/>
+		<ee:cache doc:name="Cache" doc:id="9bbb8fba-7267-4582-9ac0-e50449abb6f8" filterExpression='#[attributes.uriParams.empID == "3"]'>
+			<logger level="INFO" doc:name="cache Logger" doc:id="f5979c28-77dd-40dd-8be9-20abe9c1a6e3" message="Cache Start"/>
+			<http:request method="GET" doc:name="Request" doc:id="8d231641-7e86-47c8-8528-2bb96668ed49" url="https://reqres.in/api/users/{userID}">
+			<http:uri-params><![CDATA[#[output application/json
+---
+{
+	"userID" : attributes.uriParams.empID
+}]]]></http:uri-params>
+		</http:request>
+			<ee:transform doc:name="Transform Message" doc:id="449da882-5219-4346-bea3-5b43e5d4d52f">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+
+payload.data]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			<logger level="INFO" doc:name="ccache End Logger" doc:id="25d70b34-3110-494f-876f-fe0d70c8aa1b" message="Cache End"/>
+		</ee:cache>
+		<logger level="INFO" doc:name="end Logger" doc:id="4ab51e95-2be3-440b-92d7-d43cc9101e85" message="Completed Flow"/>
+	</flow>
+</mule>
